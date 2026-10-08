@@ -7,6 +7,7 @@ public sealed class SearchPanel : UserControl
 {
     private readonly AutoGridPanel _fields = UiLayout.AutoGrid();
     private readonly List<SearchCondition> _conditions = [];
+    private readonly Dictionary<string, InputField<string>> _selectFields = new(StringComparer.Ordinal);
     private readonly StackPanel _content;
     private DataGrid? _grid;
 
@@ -46,19 +47,48 @@ public sealed class SearchPanel : UserControl
         return this;
     }
 
+    public SearchPanel AddSelect(string propertyName, string label) => AddSelect(propertyName, label, Array.Empty<(string Key, string Value)>());
+
     public SearchPanel AddSelect(string propertyName, string label, params string[] choices)
     {
-        var field = Field.Select(label, ["すべて", .. choices]);
+        ArgumentNullException.ThrowIfNull(choices);
+        return AddSelect(propertyName, label, choices.Select(value => (Key: value, Value: value)).ToArray());
+    }
+
+    public SearchPanel AddSelect(string propertyName, string label, IEnumerable<KeyValuePair<string, string>> choices)
+    {
+        ArgumentNullException.ThrowIfNull(choices);
+        return AddSelect(propertyName, label, choices.Select(pair => (pair.Key, pair.Value)).ToArray());
+    }
+
+    /// <summary>Display Value, return Key through the field, and match model properties against Key.</summary>
+    public SearchPanel AddSelect(string propertyName, string label, params (string Key, string Value)[] choices)
+    {
+        if (_selectFields.ContainsKey(propertyName))
+            throw new ArgumentException($"プロパティ '{propertyName}' の選択欄はすでに追加されています。", nameof(propertyName));
+        var field = Field.Select(label, choices);
+        var editor = (ComboBox)field.Editor;
+        editor.Items.Insert(0, new SelectOption(null, "すべて"));
+        editor.SelectedIndex = 0;
         AddCondition(new(propertyName, typeof(string), grid =>
         {
-            if (field.Value == "すべて") return null;
+            if (editor.SelectedIndex <= 0) return null;
             string selected = field.Value;
             var property = grid.FindProperty(propertyName);
             return item => property.GetValue(item) is string value
-                && string.Equals(value, selected, StringComparison.CurrentCultureIgnoreCase);
-        }, () => field.Value = "すべて", field.ValidateValue));
+                && string.Equals(value, selected, StringComparison.Ordinal);
+        }, () => { editor.SelectedIndex = 0; field.ClearValidation(); }, field.ValidateValue));
         _fields.Add(field);
+        _selectFields.Add(propertyName, field);
         return this;
+    }
+
+    /// <summary>Return the selected key; null represents the unfiltered "all" option.</summary>
+    public string? GetSelectedKey(string propertyName)
+    {
+        if (!_selectFields.TryGetValue(propertyName, out var field))
+            throw new ArgumentException($"プロパティ '{propertyName}' の選択欄がありません。", nameof(propertyName));
+        return ((ComboBox)field.Editor).SelectedIndex <= 0 ? null : field.Value;
     }
 
     public SearchPanel AddDateRange(string propertyName, string label, DateTime start, DateTime end)

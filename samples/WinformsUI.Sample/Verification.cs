@@ -38,6 +38,9 @@ internal static class Verification
             form.SizeSelector.SelectedItem = RootSizes.Presets.Single(preset => preset.Id == RootSize.HdPlus);
             Settle(form);
             results.Add("PASS: Root presets, sample size selection, 16:9 client sizing and monitor fitting");
+            VerifySelectPairs();
+            Check(form.Line.Value == "A" && ((ComboBox)form.Line.Editor).Text == "ラインA", "Sample input displays the name and returns the line key");
+            results.Add("PASS: Select key/value pairs, dictionary inputs, key filtering and clearing");
             Check(form.RecordsGrid.Grid.Columns.Count == 6, "Model properties automatically generate columns");
             Check(form.RecordsGrid.Grid.Columns[nameof(ProductionRecord.PartNumber)]!.HeaderText == "品番"
                 && form.RecordsGrid.Grid.Columns[nameof(ProductionRecord.GoodCount)]!.HeaderText == "良品数",
@@ -100,16 +103,18 @@ internal static class Verification
             Settle(form);
             Check(form.RecordsGrid.RowCount == originalCount + 1 && form.PartNumber.ErrorMessage is null,
                 "A valid record is saved and validation cleared");
+            Check(form.Records[^1].Line == "A", "Record creation stores the selected line key");
             results.Add("PASS: Required validation and record creation");
 
             var text = (InputField<string>)form.Search.Fields[0];
             var line = form.Search.Fields.OfType<InputField<string>>().Single(field => field.LabelText == "ライン");
             text.Value = "P-102";
-            line.Value = "ラインA";
+            line.Value = "A";
             form.Search.SearchButton.PerformClick();
             Settle(form);
             Check(form.RecordsGrid.RowCount > 0, "Search finds rows");
-            Check(form.RecordsGrid.Items.All(row => row.PartNumber == "P-102" && row.Line == "ラインA"),
+            Check(((ComboBox)line.Editor).Text == "ラインA", "Search displays the choice label");
+            Check(form.RecordsGrid.Items.All(row => row.PartNumber == "P-102" && row.Line == "A"),
                 "Text and selection filters are combined");
             var originalOrder = form.Records.ToArray();
             form.RecordsGrid.Grid.Sort(form.RecordsGrid.Grid.Columns[nameof(ProductionRecord.GoodCount)]!, ListSortDirection.Descending);
@@ -122,8 +127,8 @@ internal static class Verification
 
             const string specialPart = "P-%[*]O'Brien";
             var records = form.Records;
-            records.Add(new ProductionRecord { WorkDate = DateTime.Today.AddHours(23).AddMinutes(59), PartNumber = specialPart, Line = "ラインA", GoodCount = 10 });
-            records.Add(new ProductionRecord { WorkDate = DateTime.Today.AddDays(1), PartNumber = specialPart, Line = "ラインA", GoodCount = 20 });
+            records.Add(new ProductionRecord { WorkDate = DateTime.Today.AddHours(23).AddMinutes(59), PartNumber = specialPart, Line = "A", GoodCount = 10 });
+            records.Add(new ProductionRecord { WorkDate = DateTime.Today.AddDays(1), PartNumber = specialPart, Line = "A", GoodCount = 20 });
             form.RecordsGrid.RefreshData();
             text.Value = specialPart;
             form.Search.SearchButton.PerformClick();
@@ -146,7 +151,7 @@ internal static class Verification
 
             // Editing a search box alone must not change the last applied search on a refresh.
             text.Value = "P-205";
-            var addedRecord = new ProductionRecord { WorkDate = DateTime.Today, PartNumber = "P-102", Line = "ラインA", GoodCount = 500 };
+            var addedRecord = new ProductionRecord { WorkDate = DateTime.Today, PartNumber = "P-102", Line = "A", GoodCount = 500 };
             records.Add(addedRecord);
             form.RecordsGrid.RefreshData();
             Check(form.RecordsGrid.Items.All(record => record.PartNumber == "P-102")
@@ -190,6 +195,8 @@ internal static class Verification
             Check(positiveNumber.Value == 1, "Numeric fields default to their minimum");
             results.Add("PASS: Field visibility and numeric defaults");
 
+            ExtendedVerification.Run(outputDirectory, results);
+
             form.Close();
             File.WriteAllLines(Path.Combine(outputDirectory, "results.txt"), results.Append("All checks passed."));
             return 0;
@@ -214,6 +221,49 @@ internal static class Verification
     private static void Settle(SampleForm form)
     {
         for (int i = 0; i < 3; i++) { form.PerformLayout(); Application.DoEvents(); }
+    }
+
+    private static void VerifySelectPairs()
+    {
+        using var field = Field.Select("選択", ("A", "同じ表示"), ("B", "同じ表示"));
+        var editor = (ComboBox)field.Editor;
+        int changes = 0;
+        field.ValueChanged += (_, _) => changes++;
+        field.Value = "B";
+        Check(field.Value == "B" && editor.GetItemText(editor.SelectedItem) == "同じ表示", "Value setter selects a key even with duplicate labels");
+        editor.SelectedIndex = 0;
+        Check(field.Value == "A" && changes == 2, "Native selection changes return keys and notify listeners");
+        using var dictionaryField = Field.Select("辞書", new Dictionary<string, string> { ["01"] = "第一工程" });
+        Check(dictionaryField.Value == "01" && ((ComboBox)dictionaryField.Editor).GetItemText(((ComboBox)dictionaryField.Editor).SelectedItem) == "第一工程",
+            "Dictionary choices display values and return keys");
+        using var legacyField = Field.Select("互換", "選択A", "選択B");
+        legacyField.Value = "選択B";
+        Check(legacyField.Value == "選択B", "String-only choices remain usable");
+        using var emptyField = Field.Select("空");
+        Check(emptyField.Value == "", "Empty choice lists remain usable");
+
+        using var grid = new DataGrid<SelectionRecord>().SetData(
+            [new() { Code = "" }, new() { Code = "すべて" }, new() { Code = "A" }, new() { Code = "B" }]);
+        using var search = new SearchPanel().AddSelect(nameof(SelectionRecord.Code), "コード",
+            ("", "空のキー"), ("すべて", "通常のキー"), ("A", "共通表示"), ("B", "共通表示")).Connect(grid);
+        var selection = (InputField<string>)search.Fields[0];
+        Check(grid.RowCount == 4 && ((ComboBox)selection.Editor).SelectedIndex == 0, "Search begins with the distinct all option");
+        Check(search.GetSelectedKey(nameof(SelectionRecord.Code)) is null, "All returns a null key");
+        foreach (string key in new[] { "", "すべて", "A", "B" })
+        {
+            selection.Value = key;
+            search.ApplySearch();
+            Check(grid.RowCount == 1 && grid.Items[0].Code == key, "Search matches keys, including empty and all-named keys");
+            Check(search.GetSelectedKey(nameof(SelectionRecord.Code)) == key, "Selected keys can be retrieved from the search panel");
+        }
+        search.ClearSearch();
+        Check(grid.RowCount == 4 && ((ComboBox)selection.Editor).SelectedIndex == 0, "Clear resets the all option without treating it as a key");
+        Check(search.GetSelectedKey(nameof(SelectionRecord.Code)) is null, "Cleared search returns a null key");
+
+        bool rejectedDuplicate = false;
+        try { using var invalid = Field.Select("重複", ("A", "表示1"), ("A", "表示2")); }
+        catch (ArgumentException) { rejectedDuplicate = true; }
+        Check(rejectedDuplicate, "Duplicate keys are rejected");
     }
 
     private static void CheckFields(AutoGridPanel panel)
@@ -244,5 +294,11 @@ internal static class Verification
         public bool Enabled { get; set; }
         [Browsable(false)]
         public string InternalValue { get; set; } = "";
+    }
+
+    private sealed class SelectionRecord
+    {
+        [DisplayName("コード")]
+        public string Code { get; set; } = "";
     }
 }

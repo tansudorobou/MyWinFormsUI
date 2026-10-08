@@ -3,7 +3,15 @@ using System.ComponentModel;
 namespace WinformsUI;
 
 /// <summary>A native editor with its label above it and optional help or error below it.</summary>
-public sealed class InputField<T> : UserControl
+public interface IInputField
+{
+    string LabelText { get; }
+    bool ValidateValue();
+    void ClearValidation();
+    void SetError(string? message);
+}
+
+public sealed class InputField<T> : UserControl, IInputField
 {
     private readonly Label _label;
     private readonly Label _message;
@@ -68,6 +76,12 @@ public sealed class InputField<T> : UserControl
     public void ClearValidation()
     {
         ErrorMessage = null;
+        RefreshMessage();
+    }
+
+    public void SetError(string? message)
+    {
+        ErrorMessage = message;
         RefreshMessage();
     }
 

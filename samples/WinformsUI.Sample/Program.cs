@@ -11,6 +11,6 @@ internal static class Program
             Environment.ExitCode = Verification.Run();
             return;
         }
-        Application.Run(new SampleForm());
+        Application.Run(args.Contains("--gallery") ? new ComponentGalleryForm() : new SampleForm());
     }
 }

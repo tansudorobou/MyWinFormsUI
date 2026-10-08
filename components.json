@@ -1,0 +1,550 @@
+{
+  "name": "WinformsUI",
+  "targetFramework": "net10.0-windows",
+  "sourceFiles": [
+    "src/WinformsUI/Components/AspectRatioPanel.cs",
+    "src/WinformsUI/Components/Attachments.cs",
+    "src/WinformsUI/Components/Avatar.cs",
+    "src/WinformsUI/Components/Breadcrumb.cs",
+    "src/WinformsUI/Components/CarouselPanel.cs",
+    "src/WinformsUI/Components/Chart.cs",
+    "src/WinformsUI/Components/ChoicePicker.cs",
+    "src/WinformsUI/Components/Collapsible.cs",
+    "src/WinformsUI/Components/CommandPalette.cs",
+    "src/WinformsUI/Components/InputGroup.cs",
+    "src/WinformsUI/Components/MessageScroller.cs",
+    "src/WinformsUI/Components/Messages.cs",
+    "src/WinformsUI/Components/ModelForm.cs",
+    "src/WinformsUI/Components/MultiSlider.cs",
+    "src/WinformsUI/Components/Pagination.cs",
+    "src/WinformsUI/Components/Questionnaire.cs",
+    "src/WinformsUI/Components/SurfacePopup.cs",
+    "src/WinformsUI/Components/Toasts.cs",
+    "src/WinformsUI/DataGrid.cs",
+    "src/WinformsUI/Field.cs",
+    "src/WinformsUI/InputField.cs",
+    "src/WinformsUI/Layout.cs",
+    "src/WinformsUI/ListBindingView.cs",
+    "src/WinformsUI/NaturalDates.cs",
+    "src/WinformsUI/RootPanel.cs",
+    "src/WinformsUI/RootSize.cs",
+    "src/WinformsUI/SearchPanel.cs",
+    "src/WinformsUI/Theming/ThemeSession.cs",
+    "src/WinformsUI/Theming/ThemeTemplate.cs",
+    "src/WinformsUI/Ui.cs"
+  ],
+  "components": [
+    {
+      "id": "accordion",
+      "url": "https://ui.shadcn.com/docs/components/base/accordion",
+      "strategy": "composite",
+      "api": "AccordionPanel",
+      "source": "src/WinformsUI/Components/Collapsible.cs",
+      "note": "単一・複数展開、無効化、ネイティブボタンでの操作"
+    },
+    {
+      "id": "alert",
+      "url": "https://ui.shadcn.com/docs/components/base/alert",
+      "strategy": "native",
+      "api": "Label + Panel / GroupBox。操作はButtonを添える",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "alert-dialog",
+      "url": "https://ui.shadcn.com/docs/components/base/alert-dialog",
+      "strategy": "native",
+      "api": "MessageBox.Show。ボタン・戻り値・モーダル・所有者は標準機能",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "aspect-ratio",
+      "url": "https://ui.shadcn.com/docs/components/base/aspect-ratio",
+      "strategy": "composite",
+      "api": "AspectRatioPanel",
+      "source": "src/WinformsUI/Components/AspectRatioPanel.cs",
+      "note": "内容を指定比率に保ち、利用可能な領域に収める"
+    },
+    {
+      "id": "attachment",
+      "url": "https://ui.shadcn.com/docs/components/base/attachment",
+      "strategy": "composite",
+      "api": "AttachmentView / AttachmentList",
+      "source": "src/WinformsUI/Components/Attachments.cs",
+      "note": "名前・サイズ・画像・状態・進捗・表示・削除。ファイル選択はOpenFileDialog"
+    },
+    {
+      "id": "avatar",
+      "url": "https://ui.shadcn.com/docs/components/base/avatar",
+      "strategy": "composite",
+      "api": "Avatar",
+      "source": "src/WinformsUI/Components/Avatar.cs",
+      "note": "画像がない/読込失敗時の文字フォールバック。グループと件数はRowとLabelで合成"
+    },
+    {
+      "id": "badge",
+      "url": "https://ui.shadcn.com/docs/components/base/badge",
+      "strategy": "native",
+      "api": "Label / LinkLabel。画像、文字、件数、色は標準プロパティとテーマ",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "breadcrumb",
+      "url": "https://ui.shadcn.com/docs/components/base/breadcrumb",
+      "strategy": "composite",
+      "api": "Breadcrumb",
+      "source": "src/WinformsUI/Components/Breadcrumb.cs",
+      "note": "階層リンク、現在位置、長いパスの省略とメニュー、移動コールバック"
+    },
+    {
+      "id": "bubble",
+      "url": "https://ui.shadcn.com/docs/components/base/bubble",
+      "strategy": "composite",
+      "api": "MessageBubble",
+      "source": "src/WinformsUI/Components/Messages.cs",
+      "note": "会話本文、展開/折りたたみ、リアクション、任意の内容と操作"
+    },
+    {
+      "id": "button",
+      "url": "https://ui.shadcn.com/docs/components/base/button",
+      "strategy": "native",
+      "api": "Button / LinkLabel。アイコンはImage、無効化はEnabled",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "button-group",
+      "url": "https://ui.shadcn.com/docs/components/base/button-group",
+      "strategy": "native",
+      "api": "FlowLayoutPanel / ToolStripで既存ボタンを並べる",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "calendar",
+      "url": "https://ui.shadcn.com/docs/components/base/calendar",
+      "strategy": "native",
+      "api": "MonthCalendar。SelectionRange、MaxSelectionCount、BoldedDates、週番号とロケール",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "card",
+      "url": "https://ui.shadcn.com/docs/components/base/card",
+      "strategy": "native",
+      "api": "GroupBox / Panel + Label + 内容 + ボタン。追加の対話機能はない",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "carousel",
+      "url": "https://ui.shadcn.com/docs/components/base/carousel",
+      "strategy": "composite",
+      "api": "CarouselPanel",
+      "source": "src/WinformsUI/Components/CarouselPanel.cs",
+      "note": "前後移動、境界、ループ、位置表示、Ctrl+左右キー。アニメーションは設けない"
+    },
+    {
+      "id": "chart",
+      "url": "https://ui.shadcn.com/docs/components/base/chart",
+      "strategy": "composite",
+      "api": "Chart",
+      "source": "src/WinformsUI/Components/Chart.cs",
+      "note": "棒・線・面・円・ドーナツ・レーダー・放射、複数系列、積上げ、軸、凡例、値のヒント"
+    },
+    {
+      "id": "checkbox",
+      "url": "https://ui.shadcn.com/docs/components/base/checkbox",
+      "strategy": "native",
+      "api": "CheckBox。3状態、Enabled、入力検証はField",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "collapsible",
+      "url": "https://ui.shadcn.com/docs/components/base/collapsible",
+      "strategy": "composite",
+      "api": "CollapsibleSection",
+      "source": "src/WinformsUI/Components/Collapsible.cs",
+      "note": "内容の開閉、外部からの状態設定、状態変更通知"
+    },
+    {
+      "id": "combobox",
+      "url": "https://ui.shadcn.com/docs/components/base/combobox",
+      "strategy": "composite",
+      "api": "ChoicePicker<TKey>",
+      "source": "src/WinformsUI/Components/ChoicePicker.cs",
+      "note": "検索、グループ、単一/複数選択、無効な候補、選択維持。単純な候補は標準ComboBox"
+    },
+    {
+      "id": "command",
+      "url": "https://ui.shadcn.com/docs/components/base/command",
+      "strategy": "composite",
+      "api": "CommandPalette",
+      "source": "src/WinformsUI/Components/CommandPalette.cs",
+      "note": "名前・グループ・ショートカットで検索、Enterで実行、Escで閉じる"
+    },
+    {
+      "id": "context-menu",
+      "url": "https://ui.shadcn.com/docs/components/base/context-menu",
+      "strategy": "native",
+      "api": "ContextMenuStrip。入れ子、ショートカット、チェック、アイコン、クリック通知",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "data-table",
+      "url": "https://ui.shadcn.com/docs/components/base/data-table",
+      "strategy": "composite",
+      "api": "DataGrid<T>",
+      "source": "src/WinformsUI/DataGrid.cs",
+      "note": "List<T>、DisplayName、型付き選択、検索・ソート、列表示、ページング。行操作と複数選択は標準Grid API"
+    },
+    {
+      "id": "date-picker",
+      "url": "https://ui.shadcn.com/docs/components/base/date-picker",
+      "strategy": "composite",
+      "api": "Field.Date / Field.DateText",
+      "source": "src/WinformsUI/NaturalDates.cs",
+      "note": "DateTimePickerと2つの日付入力で範囲・時刻・プリセット。文字入力は日本語/英語の相対日付も解析"
+    },
+    {
+      "id": "dialog",
+      "url": "https://ui.shadcn.com/docs/components/base/dialog",
+      "strategy": "native",
+      "api": "Form.ShowDialog。所有者、スクロール、AcceptButton/CancelButton、DialogResult",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "direction",
+      "url": "https://ui.shadcn.com/docs/components/base/direction",
+      "strategy": "native",
+      "api": "Control.RightToLeftとForm.RightToLeftLayout",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "drawer",
+      "url": "https://ui.shadcn.com/docs/components/base/drawer",
+      "strategy": "composite",
+      "api": "DrawerForm",
+      "source": "src/WinformsUI/Components/SurfacePopup.cs",
+      "note": "4方向、ネイティブのモーダル/非モーダル、ドラッグハンドル、スナップサイズ、入れ子"
+    },
+    {
+      "id": "dropdown-menu",
+      "url": "https://ui.shadcn.com/docs/components/base/dropdown-menu",
+      "strategy": "native",
+      "api": "ToolStripDropDownButton / ContextMenuStrip",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "empty",
+      "url": "https://ui.shadcn.com/docs/components/base/empty",
+      "strategy": "native",
+      "api": "GroupBox / Panel + Label + 任意の操作。状態の表示のみ",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "field",
+      "url": "https://ui.shadcn.com/docs/components/base/field",
+      "strategy": "composite",
+      "api": "InputField<T> / ModelForm<T>",
+      "source": "src/WinformsUI/InputField.cs",
+      "note": "ラベル・ヘルプ・エラー、任意の入力、レスポンシブ配置、モデル読取、DataAnnotations、変更/リセット"
+    },
+    {
+      "id": "hover-card",
+      "url": "https://ui.shadcn.com/docs/components/base/hover-card",
+      "strategy": "composite",
+      "api": "SurfacePopup.AttachHover",
+      "source": "src/WinformsUI/Components/SurfacePopup.cs",
+      "note": "開閉遅延、ホバー・フォーカス、操作可能な内容。基盤はToolStripDropDown"
+    },
+    {
+      "id": "input",
+      "url": "https://ui.shadcn.com/docs/components/base/input",
+      "strategy": "native",
+      "api": "TextBox。入力制約・無効化・パスワード・キー操作とField",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "input-group",
+      "url": "https://ui.shadcn.com/docs/components/base/input-group",
+      "strategy": "composite",
+      "api": "InputGroup",
+      "source": "src/WinformsUI/Components/InputGroup.cs",
+      "note": "入力の前後・上部・下部に文字・ボタン・その他の標準部品を配置"
+    },
+    {
+      "id": "input-otp",
+      "url": "https://ui.shadcn.com/docs/components/base/input-otp",
+      "strategy": "native",
+      "api": "MaskedTextBox。数字/英数字マスク、コピー・貼付、区切り、MaskCompleted、ReadOnly、Enabled",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "item",
+      "url": "https://ui.shadcn.com/docs/components/base/item",
+      "strategy": "native",
+      "api": "ListView / Panelで画像・タイトル・説明・操作を合成",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "kbd",
+      "url": "https://ui.shadcn.com/docs/components/base/kbd",
+      "strategy": "native",
+      "api": "Label。実際の操作はKeys、ShortcutKeys、ProcessCmdKey",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "label",
+      "url": "https://ui.shadcn.com/docs/components/base/label",
+      "strategy": "native",
+      "api": "Label / LinkLabel。AccessibleNameとTabIndexもネイティブ",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "marker",
+      "url": "https://ui.shadcn.com/docs/components/base/marker",
+      "strategy": "native",
+      "api": "Label / ProgressBar / Panel。状態・説明・区切り・任意の操作を合成",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "menubar",
+      "url": "https://ui.shadcn.com/docs/components/base/menubar",
+      "strategy": "native",
+      "api": "MenuStrip。サブメニュー、チェック、ショートカット、アイコン",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "message",
+      "url": "https://ui.shadcn.com/docs/components/base/message",
+      "strategy": "composite",
+      "api": "ConversationMessage",
+      "source": "src/WinformsUI/Components/Messages.cs",
+      "note": "ID、送信者、本文、アバター、左右配置、ヘッダー/フッター、任意の操作・添付"
+    },
+    {
+      "id": "message-scroller",
+      "url": "https://ui.shadcn.com/docs/components/base/message-scroller",
+      "strategy": "composite",
+      "api": "MessageScroller",
+      "source": "src/WinformsUI/Components/MessageScroller.cs",
+      "note": "読書位置、ターン開始、明示的な追従/停止、履歴追加、ストリーム更新、再開位置、IDへの移動、行の仮想化"
+    },
+    {
+      "id": "native-select",
+      "url": "https://ui.shadcn.com/docs/components/base/native-select",
+      "strategy": "native",
+      "api": "ComboBox.DropDownList / Field.Selectのキーと表示名",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "navigation-menu",
+      "url": "https://ui.shadcn.com/docs/components/base/navigation-menu",
+      "strategy": "native",
+      "api": "MenuStrip / TreeView / LinkLabel。移動は標準Click/AfterSelect",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "pagination",
+      "url": "https://ui.shadcn.com/docs/components/base/pagination",
+      "strategy": "composite",
+      "api": "Pagination",
+      "source": "src/WinformsUI/Components/Pagination.cs",
+      "note": "最初・前・次・最後、ページサイズ、件数、検索後のリセット、DataGridへの接続"
+    },
+    {
+      "id": "popover",
+      "url": "https://ui.shadcn.com/docs/components/base/popover",
+      "strategy": "composite",
+      "api": "SurfacePopup.Show",
+      "source": "src/WinformsUI/Components/SurfacePopup.cs",
+      "note": "任意の入力や操作を含むポップオーバー。ネイティブDropDownの画面収容・外側クリック・Escを使用"
+    },
+    {
+      "id": "progress",
+      "url": "https://ui.shadcn.com/docs/components/base/progress",
+      "strategy": "native",
+      "api": "ProgressBar + Label。値・進行度・処理中",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "questionnaire",
+      "url": "https://ui.shadcn.com/docs/components/base/questionnaire",
+      "strategy": "composite",
+      "api": "Questionnaire",
+      "source": "src/WinformsUI/Components/Questionnaire.cs",
+      "note": "単一/複数/自由入力、必須、明示スキップ、条件付き項目、独自検証、戻る/次へ、状態保存・再開、送信"
+    },
+    {
+      "id": "radio-group",
+      "url": "https://ui.shadcn.com/docs/components/base/radio-group",
+      "strategy": "native",
+      "api": "同じPanel内のRadioButton。単一選択、無効化、Appearance.Buttonも標準",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "resizable",
+      "url": "https://ui.shadcn.com/docs/components/base/resizable",
+      "strategy": "native",
+      "api": "SplitContainer。入れ子・向き・分割バー・標準キーボード操作",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "scroll-area",
+      "url": "https://ui.shadcn.com/docs/components/base/scroll-area",
+      "strategy": "native",
+      "api": "Panel.AutoScroll / HScrollBar / VScrollBar。独自のスクロールバーを再描画しない",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "select",
+      "url": "https://ui.shadcn.com/docs/components/base/select",
+      "strategy": "native",
+      "api": "ComboBox / Field.Select。高度な検索/グループ/複数選択はChoicePicker",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "separator",
+      "url": "https://ui.shadcn.com/docs/components/base/separator",
+      "strategy": "native",
+      "api": "Panel.BorderStyle / ToolStripSeparator / Label",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "sheet",
+      "url": "https://ui.shadcn.com/docs/components/base/sheet",
+      "strategy": "composite",
+      "api": "SheetForm",
+      "source": "src/WinformsUI/Components/SurfacePopup.cs",
+      "note": "所有フォームの端に配置、サイズ設定、ネイティブのモーダル/非モーダル・閉じる・フォーカス"
+    },
+    {
+      "id": "sidebar",
+      "url": "https://ui.shadcn.com/docs/components/base/sidebar",
+      "strategy": "native",
+      "api": "SplitContainer + TreeView / Panel。折りたたみはPanel1Collapsed、入れ子メニューはTreeNode",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "skeleton",
+      "url": "https://ui.shadcn.com/docs/components/base/skeleton",
+      "strategy": "native",
+      "api": "Panel / Labelをプレースホルダーとして表示しVisibleで切替。装飾アニメーションは後回し",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "slider",
+      "url": "https://ui.shadcn.com/docs/components/base/slider",
+      "strategy": "composite",
+      "api": "MultiSlider",
+      "source": "src/WinformsUI/Components/MultiSlider.cs",
+      "note": "単一値はTrackBar。範囲や複数値だけを複数TrackBarで追加し、値の交差を防止"
+    },
+    {
+      "id": "spinner",
+      "url": "https://ui.shadcn.com/docs/components/base/spinner",
+      "strategy": "native",
+      "api": "ProgressBar.Style = Marquee。円形の再描画はデザイン段階",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "switch",
+      "url": "https://ui.shadcn.com/docs/components/base/switch",
+      "strategy": "native",
+      "api": "CheckBox。2状態の操作は標準、外観はテンプレート",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "table",
+      "url": "https://ui.shadcn.com/docs/components/base/table",
+      "strategy": "native",
+      "api": "DataGridView。表示・列/セル形式・フッター・行操作は標準API",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "tabs",
+      "url": "https://ui.shadcn.com/docs/components/base/tabs",
+      "strategy": "native",
+      "api": "TabControl。選択、向き、画像、ページの追加/削除",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "textarea",
+      "url": "https://ui.shadcn.com/docs/components/base/textarea",
+      "strategy": "native",
+      "api": "TextBox.Multiline / RichTextBox",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "toast",
+      "url": "https://ui.shadcn.com/docs/components/base/toast",
+      "strategy": "composite",
+      "api": "ToastHost / ToastNotification",
+      "source": "src/WinformsUI/Components/Toasts.cs",
+      "note": "自動消去、閉じる、操作、非同期の処理中/成功/エラー状態"
+    },
+    {
+      "id": "toggle",
+      "url": "https://ui.shadcn.com/docs/components/base/toggle",
+      "strategy": "native",
+      "api": "CheckBox.Appearance = Button",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "toggle-group",
+      "url": "https://ui.shadcn.com/docs/components/base/toggle-group",
+      "strategy": "native",
+      "api": "CheckBox / RadioButtonのAppearance.ButtonをPanelでグループ化",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "tooltip",
+      "url": "https://ui.shadcn.com/docs/components/base/tooltip",
+      "strategy": "native",
+      "api": "ToolTip。表示遅延、位置、所有者。キーボードフォーカスはEnterイベントからShow",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    },
+    {
+      "id": "typography",
+      "url": "https://ui.shadcn.com/docs/components/base/typography",
+      "strategy": "native",
+      "api": "Label.Font / RichTextBox。見出し・段落・リスト・コードの書式は標準プロパティとテーマ",
+      "source": "samples/WinformsUI.Sample/ComponentGalleryForm.cs",
+      "note": "標準機能を再実装しない"
+    }
+  ]
+}

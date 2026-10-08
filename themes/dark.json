@@ -1,0 +1,14 @@
+{
+  "name": "Dark",
+  "background": "#202020",
+  "foreground": "#F0F0F0",
+  "gap": 12,
+  "rootPadding": 16,
+  "roles": {
+    "input": { "background": "#303030", "foreground": "#F0F0F0" },
+    "button": { "background": "#404040", "foreground": "#FFFFFF" },
+    "danger": { "foreground": "#FF9090" },
+    "muted": { "foreground": "#BBBBBB" }
+  },
+  "chartColors": ["#7AB8FF", "#7ED9A4", "#F0CB75", "#DD9BE5", "#F79A8B", "#8CDAD8"]
+}

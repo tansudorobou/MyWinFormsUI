@@ -10,7 +10,7 @@ public sealed class SampleForm : Form
     private readonly List<InputField<string>> _extraFields = [];
     internal readonly InputField<DateTime> WorkDate = Field.Date("作業日");
     internal readonly InputField<string> PartNumber = Field.Text("品番").Required();
-    internal readonly InputField<string> Line = Field.Select("ライン", "ラインA", "ラインB", "ラインC");
+    internal readonly InputField<string> Line = Field.Select("ライン", SampleData.LineChoices);
     internal readonly InputField<decimal> GoodCount = Field.Number("良品数", min: 0);
     internal readonly InputField<decimal> BadCount = Field.Number("不良数", min: 0);
     internal readonly InputField<string> Remarks = Field.Multiline("備考").FullWidth();
@@ -38,7 +38,7 @@ public sealed class SampleForm : Form
         Search = new SearchPanel()
             .AddText(nameof(ProductionRecord.PartNumber), "品番（部分一致）")
             .AddText(nameof(ProductionRecord.Remarks), "備考（部分一致）")
-            .AddSelect(nameof(ProductionRecord.Line), "ライン", "ラインA", "ラインB", "ラインC")
+            .AddSelect(nameof(ProductionRecord.Line), "ライン", SampleData.LineChoices)
             .AddDateRange(nameof(ProductionRecord.WorkDate), "作業日", DateTime.Today.AddDays(-7), DateTime.Today)
             .Connect(RecordsGrid);
         SaveButton = Ui.Button("登録", SaveRecord);
@@ -58,7 +58,8 @@ public sealed class SampleForm : Form
             UiLayout.Wrap(sizeLabel, SizeSelector),
             Ui.Label("実績入力 — ウィンドウ幅に合わせて入力欄が折り返されます。"),
             FormFields,
-            UiLayout.Wrap(SaveButton, Ui.Button("入力をクリア", ClearInput), AddFieldButton, RemoveFieldButton),
+            UiLayout.Wrap(SaveButton, Ui.Button("入力をクリア", ClearInput), AddFieldButton, RemoveFieldButton,
+                Ui.Button("コンポーネント一覧", () => new ComponentGalleryForm().Show(this))),
             _status,
             Ui.Label("実績検索 — 列ヘッダーをクリックすると昇順 / 降順に並べ替えます。"),
             Search,
@@ -104,7 +105,7 @@ public sealed class SampleForm : Form
     {
         WorkDate.Value = DateTime.Today;
         PartNumber.Value = "";
-        Line.Value = "ラインA";
+        Line.Value = "A";
         GoodCount.Value = 0;
         BadCount.Value = 0;
         Remarks.Value = "";

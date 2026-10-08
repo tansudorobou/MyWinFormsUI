@@ -1,5 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Description>Code-first fields, automatic layouts and searchable tables using native Windows Forms controls.</Description>
+    <Description>Code-first Windows Forms components, automatic layouts, searchable model tables, charts, questionnaires and replaceable JSON design templates.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/tansudorobou/MyWinFormsUI</RepositoryUrl>
+    <PackageTags>winforms;ui;components;templates</PackageTags>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="../../themes/*.json" Pack="true" PackagePath="contentFiles/any/any/themes/" PackageCopyToOutput="true" />
+    <None Include="../../docs/*.md" Pack="true" PackagePath="docs/" />
+    <None Include="../../components.json" Pack="true" PackagePath="/" />
+  </ItemGroup>
 </Project>
