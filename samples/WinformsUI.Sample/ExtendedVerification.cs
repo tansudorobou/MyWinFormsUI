@@ -206,10 +206,14 @@ internal static class ExtendedVerification
                 gallery.Tabs.SelectedIndex = index; Settle(gallery);
                 Capture(gallery, Path.Combine(outputDirectory, $"gallery-{index}.png"));
             }
-            gallery.ThemeSelector.SelectedIndex = 1; Settle(gallery); Check(gallery.BackColor == Color.FromArgb(32, 32, 32), "Gallery loads a theme template from the packaged JSON");
+            gallery.ThemeSelector.SelectedIndex = 1; Settle(gallery); Check(gallery.BackColor == Color.FromArgb(246, 251, 244), "Gallery loads Normal from packaged JSON");
+            Capture(gallery, Path.Combine(outputDirectory, "gallery-normal.png"));
+            gallery.ThemeSelector.SelectedIndex = 2; Settle(gallery); Check(gallery.BackColor == Color.FromArgb(32, 32, 32), "Gallery loads Dark from packaged JSON");
+            Capture(gallery, Path.Combine(outputDirectory, "gallery-dark.png"));
             gallery.ThemeSelector.SelectedIndex = 0; Settle(gallery); gallery.Close();
         }
-        results.Add("PASS: All seven sample gallery tabs render and switch packaged themes");
+        results.Add("PASS: All eight sample gallery tabs render and switch Native, Normal and Dark themes");
+        GanttAndThemeVerification.Run(outputDirectory, results);
         host.Close();
     }
 

@@ -77,7 +77,8 @@ if __name__ == "__main__":
 参照: [公式コンポーネント一覧](https://ui.shadcn.com/docs/components)（2026-10-08に64項目を確認）。
 操作・データ・状態・検証の機能を対応付けています。CSSの外観、Web固有のDOM/SSR、React/Tailwind依存の実装方法は移植対象ではありません。
 標準部品で同じ操作ができるものは新しいコントロールを作りません。標準部品にない動作は小さい合成部品として実装します。
-見た目はNativeを既定値とし、JSONテンプレートのフォント・色・余白・ロール・チャート色で一括差し替えできます。
+見た目はNativeを既定値とし、JSONテンプレートのフォント・色・余白・角丸・ロール・チャート色で一括差し替えできます。Normal（緑）とDarkも同梱しています。
+製造工程用の追加部品 `GanttChart` / `GanttTask` は [GanttChart.cs](../src/WinformsUI/Components/GanttChart.cs) とREADMEのガント節を参照してください。
 
 サンプルを `dotnet run --project samples/WinformsUI.Sample -- --gallery` で起動してください。
 対話機能の検証はサンプル内の `Verification.cs` / `ExtendedVerification.cs`、描画画像と実行結果は `artifacts/verification/` にあります。

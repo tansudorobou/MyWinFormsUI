@@ -13,6 +13,7 @@ public sealed record ThemeTemplate
     public string? Foreground { get; init; }
     public int? Gap { get; init; }
     public int? RootPadding { get; init; }
+    public int? CornerRadius { get; init; }
     public Dictionary<string, ThemeStyle> Roles { get; init; } = new(StringComparer.Ordinal);
     public string[] ChartColors { get; init; } = [];
 
@@ -41,12 +42,13 @@ public sealed record ThemeTemplate
     {
         if (string.IsNullOrWhiteSpace(Name)) throw new InvalidDataException("テーマ名を指定してください。");
         if (FontSize is <= 0 or > 96 || (FontSize is float size && !float.IsFinite(size))) throw new InvalidDataException("フォントサイズは0より大きく96以下にしてください。");
-        if (Gap is < 0 || RootPadding is < 0) throw new InvalidDataException("余白を負数にはできません。");
+        if (Gap is < 0 || RootPadding is < 0 || CornerRadius is < 0) throw new InvalidDataException("余白や角の丸みを負数にはできません。");
         if (Roles is null || ChartColors is null) throw new InvalidDataException("RolesとChartColorsにはnullを指定できません。");
         _ = ParseColor(Background); _ = ParseColor(Foreground);
         foreach (var style in Roles.Values)
         {
             if (style is null) throw new InvalidDataException("スタイルが空です。");
+            if (style.CornerRadius is < 0) throw new InvalidDataException("角の丸みを負数にはできません。");
             _ = ParseColor(style.Background); _ = ParseColor(style.Foreground);
             if (style.FontSize is <= 0 or > 96 || (style.FontSize is float roleSize && !float.IsFinite(roleSize))) throw new InvalidDataException("ロールのフォントサイズが無効です。");
         }
@@ -65,6 +67,7 @@ public sealed record ThemeTemplate
 
 public sealed record ThemeStyle
 {
+    public int? CornerRadius { get; init; }
     public string? Background { get; init; }
     public string? Foreground { get; init; }
     public string? FontFamily { get; init; }

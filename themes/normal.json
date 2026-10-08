@@ -1,0 +1,16 @@
+{
+  "name": "Normal",
+  "background": "#F6FBF4",
+  "foreground": "#1B2E20",
+  "gap": 12,
+  "rootPadding": 16,
+  "cornerRadius": 8,
+  "roles": {
+    "input": { "background": "#FFFFFF", "foreground": "#1B2E20" },
+    "button": { "background": "#2E7D32", "foreground": "#FFFFFF" },
+    "table": { "background": "#FFFFFF", "foreground": "#1B2E20" },
+    "danger": { "foreground": "#BA1A1A" },
+    "muted": { "foreground": "#526454" }
+  },
+  "chartColors": ["#2E7D32", "#008577", "#7B8F29", "#396A9F", "#93614C", "#76608A"]
+}

@@ -30,6 +30,7 @@ public static class UiTheme
         Sessions.Add(root, session); return session;
     }
     internal static void Detach(Control root) => Sessions.Remove(root);
+    internal static void Refresh(Control control) => FindSession(control)?.RefreshControl(control);
     private static ThemeSession? FindSession(Control control)
     {
         for (Control? current = control; current is not null; current = current.Parent)
@@ -159,6 +160,7 @@ public sealed class ThemeSession : IDisposable
             grid.ColumnHeadersDefaultCellStyle.ForeColor = control.ForeColor;
         }
         if (control is IThemeAware aware) aware.ApplyTheme(_template);
+        RoundedCorners.Apply(control, style?.CornerRadius ?? (control is Button or TextBoxBase or ComboBox or UpDownBase ? _template.CornerRadius : null));
         control.Invalidate();
     }
 
@@ -231,6 +233,7 @@ public sealed class ThemeSession : IDisposable
                 grid.BackgroundColor = _gridBackground; grid.EnableHeadersVisualStyles = _headerVisual;
             }
             if (control is IThemeAware aware) aware.ApplyTheme(ThemeTemplate.Native);
+            RoundedCorners.Apply(control, null);
         }
     }
 }

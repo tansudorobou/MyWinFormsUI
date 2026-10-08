@@ -17,17 +17,17 @@ public sealed class ComponentGalleryForm : Form
     {
         Text = "WinformsUI — コンポーネント一覧"; ClientSize = new Size(1200, 800); MinimumSize = new Size(640, 480);
         StartPosition = FormStartPosition.CenterParent;
-        ThemeSelector.Items.AddRange(["Native", "Dark", "JSONから読み込む…"]); ThemeSelector.SelectedIndex = 0;
+        ThemeSelector.Items.AddRange(["Native", "Normal（緑）", "Dark", "JSONから読み込む…"]); ThemeSelector.SelectedIndex = 0;
         var themes = UiLayout.Row(new Label { Text = "テーマ", AutoSize = true }, ThemeSelector); themes.Dock = DockStyle.Top;
         Controls.AddRange([_tabs, _status, themes]);
-        BuildComposition(); BuildInputs(); BuildNotifications(); BuildCharts(); BuildQuestions(); BuildMessages(); BuildNative();
+        BuildComposition(); BuildInputs(); BuildNotifications(); BuildCharts(); BuildQuestions(); BuildMessages(); BuildNative(); BuildGantt();
         _theme = UiTheme.Attach(this);
         ThemeSelector.SelectedIndexChanged += (_, _) =>
         {
             try
             {
                 if (ThemeSelector.SelectedIndex == 0) _theme.Use(ThemeTemplate.Native);
-                else if (ThemeSelector.SelectedIndex == 1) _theme.Use(ThemeTemplate.Load(Path.Combine(AppContext.BaseDirectory, "themes", "dark.json")));
+                else if (ThemeSelector.SelectedIndex is 1 or 2) _theme.Use(ThemeTemplate.Load(Path.Combine(AppContext.BaseDirectory, "themes", ThemeSelector.SelectedIndex == 1 ? "normal.json" : "dark.json")));
                 else
                 {
                     using var picker = new OpenFileDialog { Filter = "テーマJSON|*.json" };
@@ -60,6 +60,10 @@ public sealed class ComponentGalleryForm : Form
             Ui.Button("シート", () => new SheetForm(this, Field.Text("シート内の入力")).Show(this)),
             Ui.Button("ドロワー", () => { var drawer = new DrawerForm(this, Field.Text("下部ドロワー")); drawer.SetSnapPoints(180, 320, 500); drawer.Show(this); }),
             Ui.Button("コマンド", () => new CommandPalette([new("実績を開く", () => new SampleForm().Show(this), "画面", "Ctrl+R"), new("入力へ", () => _tabs.SelectedIndex = 1, "移動")]).Show(this))));
+        var rounded = Ui.Button("角丸の例", () => _status.Text = "WithRadiusで個別に丸みを指定できます。").WithRadius(12);
+        var radius = Field.Number("角の丸み", min: 0, max: 32, initialValue: 12);
+        radius.ValueChanged += (_, _) => rounded.WithRadius((int)radius.Value);
+        body.Add(UiLayout.Row(radius, rounded, Ui.Button("角なしの例", () => { }).WithRadius(0)));
     }
     private void BuildInputs()
     {
@@ -147,6 +151,21 @@ public sealed class ComponentGalleryForm : Form
         body.Add(menu, UiLayout.Wrap(check, toggle), radio, UiLayout.Wrap(date, time, otp), calendar, progress, spinner, tree, split, group,
             UiLayout.Wrap(Ui.Button("確認ダイアログ", () => _status.Text = MessageBox.Show(this, "処理を続けますか？", "確認", MessageBoxButtons.YesNo).ToString()),
                 Ui.Button("RTL切替", () => { RightToLeft = RightToLeft == RightToLeft.Yes ? RightToLeft.No : RightToLeft.Yes; RightToLeftLayout = RightToLeft == RightToLeft.Yes; })));
+    }
+    private void BuildGantt()
+    {
+        var body = Page("ガント");
+        var tasks = SampleData.CreateSchedule();
+        var gantt = new GanttChart().SetData(tasks);
+        var scale = Field.Select("表示単位", new[] { ("Day", "日"), ("Week", "週"), ("Month", "月") });
+        scale.ValueChanged += (_, _) => gantt.TimelineScale = Enum.Parse<GanttScale>(scale.Value);
+        gantt.SelectionChanged += (_, _) => _status.Text = gantt.SelectedTask is { } task
+            ? $"{task.Title} / {task.Start:MM/dd}〜{task.End:MM/dd} / 進捗 {task.Progress}%" : "作業を選択してください。";
+        body.Add(UiLayout.Wrap(scale, Ui.Button("今日へ", () => gantt.ScrollToDate(DateTime.Today)),
+            Ui.Button("全作業の期間", gantt.FitToTasks), Ui.Button("選択作業の進捗 +10%", () =>
+            {
+                if (gantt.SelectedTask is { } task) { task.Progress = Math.Min(100, task.Progress + 10); gantt.RefreshData(); _status.Text = $"{task.Title}: {task.Progress}%"; }
+            })), Ui.Label("作業をクリック、または上下キーで選択できます。日付は終了日を含みます。"), gantt.FillRemainingHeight());
     }
     protected override void Dispose(bool disposing)
     {

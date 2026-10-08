@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Description>Code-first Windows Forms components, automatic layouts, searchable model tables, charts, questionnaires and replaceable JSON design templates.</Description>
+    <Version>1.1.0</Version>
+    <Description>Code-first Windows Forms components, automatic layouts, searchable model tables, charts, Gantt schedules, questionnaires and replaceable JSON themes with optional rounded corners.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/tansudorobou/MyWinFormsUI</RepositoryUrl>
     <PackageTags>winforms;ui;components;templates</PackageTags>

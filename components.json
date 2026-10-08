@@ -11,6 +11,7 @@
     "src/WinformsUI/Components/ChoicePicker.cs",
     "src/WinformsUI/Components/Collapsible.cs",
     "src/WinformsUI/Components/CommandPalette.cs",
+    "src/WinformsUI/Components/GanttChart.cs",
     "src/WinformsUI/Components/InputGroup.cs",
     "src/WinformsUI/Components/MessageScroller.cs",
     "src/WinformsUI/Components/Messages.cs",
@@ -29,6 +30,7 @@
     "src/WinformsUI/RootPanel.cs",
     "src/WinformsUI/RootSize.cs",
     "src/WinformsUI/SearchPanel.cs",
+    "src/WinformsUI/Theming/RoundedCorners.cs",
     "src/WinformsUI/Theming/ThemeSession.cs",
     "src/WinformsUI/Theming/ThemeTemplate.cs",
     "src/WinformsUI/Ui.cs"

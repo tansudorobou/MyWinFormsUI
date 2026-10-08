@@ -299,6 +299,7 @@ editor.Reset();
 
 ```csharp
 using var theme = UiTheme.Attach(this);
+theme.Use(ThemeTemplate.Load("themes/normal.json")); // 緑を基調とした明るいテーマ
 theme.Use(ThemeTemplate.Load("themes/dark.json"));
 theme.Use(ThemeTemplate.Native); // ネイティブのフォント、色、余白へ復帰
 ```
@@ -328,9 +329,57 @@ theme.Use(ThemeTemplate.Native); // ネイティブのフォント、色、余�
 ```
 
 省略した値は元の標準設定を維持します。色は `#RRGGBB` 形式です。
-`themes/native.json` と `themes/dark.json` はサンプル出力先にもコピーされ、ギャラリーで切替できます。
+`themes/native.json`、`themes/normal.json`、`themes/dark.json` はサンプル出力先にもコピーされ、ギャラリーで切替できます。
+Normalはマテリアルカラーを参考にした緑・白の配色です。Nativeは従来どおり標準表示です。
 `UiTheme.Inherit(child, owner)` は独立したポップアップへテーマを引き継ぎ、所有者側の切替にも追従します。
 OSが描画するカレンダー等の詳細な外観は、標準コントロールで設定可能なプロパティの範囲です。
+
+### 角の丸み
+
+JSONに `"cornerRadius": 8` を追加すると、ボタン・テキスト入力・選択・数値入力を角丸にします。
+値は96 DPIでの論理ピクセルで、DPI変更やサイズ変更にも追従します。
+ロール別には `"roles": { "button": { "cornerRadius": 12 } }` と指定できます。
+Normalの既定値は8、NativeとDarkは角丸を指定しません。
+
+```csharp
+var save = Ui.Button("登録", Save).WithRadius(12);
+var square = Ui.Button("取消", Cancel).WithRadius(0);
+var input = Field.Text("品番");
+input.Editor.WithRadius(6);
+save.ResetRadius(); // 個別指定を解除し、現在のテーマに従う
+```
+
+個別指定はテーマより優先されます。`WithRadius` は任意のControlに使用できます。
+標準コントロールのRegionで外周を丸くするため、OS標準の枠線は角の部分で切り取られます。
+フォームやレイアウト全体は自動で丸めません。テーマをNativeに戻すとテーマ由来の丸みは元のRegionへ戻ります。
+
+## ガント
+
+```csharp
+var tasks = new List<GanttTask>
+{
+    new() { Id = "cutting", Title = "切断", Resource = "ラインA",
+        Start = DateTime.Today, End = DateTime.Today.AddDays(3), Progress = 40 },
+    new() { Id = "inspection", Title = "検査", Resource = "検査室",
+        Start = DateTime.Today.AddDays(4), End = DateTime.Today.AddDays(5) }
+};
+var gantt = new GanttChart().SetData(tasks);
+gantt.TimelineScale = GanttScale.Week; // Day / Week / Month
+gantt.SelectionChanged += (_, _) => Console.WriteLine(gantt.SelectedTask?.Id);
+Controls.Add(gantt);
+gantt.Dock = DockStyle.Fill;
+tasks[0].Progress = 60;
+gantt.RefreshData();
+```
+
+開始日・終了日は時刻を除いた日付で、終了日を含みます。同日の作業も1日分のバーです。
+IDは必須かつ一意、進捗は0〜100、全作業の期間は100年以内です。
+クリック・上下/Home/Endキーで元のモデルを選択し、選択行へ自動スクロールします。
+担当表示、進捗バー、週末の背景、今日の線、ツールチップ、縦横のスクロールがあります。
+`FitToTasks()` は表示期間を全作業に合わせ、`SetViewRange(start, end)` は期間を指定し、`ScrollToDate(date)` は日付へ移動します。
+`Items` は渡したListのモデルを参照します。Listの追加・削除・値の変更後は `RefreshData()` を呼んでください。
+表示は読み取り専用です。日付の編集、工程の依存関係や自動スケジューリングはアプリ側で扱います。
+ギャラリーの「ガント」タブに製造工程のサンプル、表示単位切替、進捗更新の例があります。
 
 ## 追加した対話機能
 
