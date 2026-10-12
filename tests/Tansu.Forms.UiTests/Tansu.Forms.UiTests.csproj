@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UseWindowsForms>false</UseWindowsForms>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="FlaUI.UIA3" Version="5.0.0" />
+    <ProjectReference Include="../../samples/Tansu.Forms.Sample/Tansu.Forms.Sample.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+</Project>

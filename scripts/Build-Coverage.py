@@ -64,23 +64,22 @@ if __name__ == "__main__":
         entry = {"id": slug, "url": f"https://ui.shadcn.com/docs/components/base/{slug}"}
         if slug in CUSTOM:
             file, api, note = CUSTOM[slug]
-            source = Path("src/WinformsUI/Components") / file
+            source = Path("src/Tansu.Forms.Components/Components") / file
             source = (ROOT / source).resolve().relative_to(ROOT).as_posix()
             assert (ROOT / source).is_file(), source
             entry.update(strategy="composite", api=api, source=source, note=note)
         else:
-            entry.update(strategy="native", api=NATIVE[slug], source="samples/WinformsUI.Sample/ComponentGalleryForm.cs", note="標準機能を再実装しない")
+            entry.update(strategy="native", api=NATIVE[slug], source="samples/Tansu.Forms.Sample/ComponentGalleryForm.cs", note="標準機能を再実装しない")
         rows.append(entry)
-    (ROOT / "docs/components.json").write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
     intro = """# コンポーネント対応表
 
 参照: [公式コンポーネント一覧](https://ui.shadcn.com/docs/components)（2026-10-08に64項目を確認）。
 操作・データ・状態・検証の機能を対応付けています。CSSの外観、Web固有のDOM/SSR、React/Tailwind依存の実装方法は移植対象ではありません。
 標準部品で同じ操作ができるものは新しいコントロールを作りません。標準部品にない動作は小さい合成部品として実装します。
 見た目はNativeを既定値とし、JSONテンプレートのフォント・色・余白・角丸・ロール・チャート色で一括差し替えできます。Normal（緑）とDarkも同梱しています。
-製造工程用の追加部品 `GanttChart` / `GanttTask` は [GanttChart.cs](../src/WinformsUI/Components/GanttChart.cs) とREADMEのガント節を参照してください。
+製造工程用の追加部品 `GanttChart` / `GanttTask` は [GanttChart.cs](../src/Tansu.Forms.Components/Components/GanttChart.cs) とREADMEのガント節を参照してください。
 
-サンプルを `dotnet run --project samples/WinformsUI.Sample -- --gallery` で起動してください。
+サンプルを `dotnet run --project samples/Tansu.Forms.Sample -- --gallery` で起動してください。
 対話機能の検証はサンプル内の `Verification.cs` / `ExtendedVerification.cs`、描画画像と実行結果は `artifacts/verification/` にあります。
 標準部品の全プロパティを別APIとして包み直すことはしません。対応表に記載した標準APIを直接使ってください。
 
@@ -89,7 +88,15 @@ if __name__ == "__main__":
 """
     table = [f"| [{row['id']}]({row['url']}) | {'標準' if row['strategy']=='native' else '合成'} | [{row['api']}](../{row['source']}) | {row['note']} |" for row in rows]
     (ROOT / "docs/COMPONENTS.md").write_text(intro + "\n".join(table) + "\n", encoding="utf-8")
-    source_files = sorted(path.relative_to(ROOT).as_posix() for path in (ROOT / "src/WinformsUI").rglob("*.cs") if "obj" not in path.parts and "bin" not in path.parts)
-    registry = {"name": "WinformsUI", "targetFramework": "net10.0-windows", "sourceFiles": source_files, "components": rows}
+    projects = []
+    for name, dependencies in [("Tansu.Forms.Layout", []), ("Tansu.Forms.Execution", []), ("Tansu.Forms.Components", ["Tansu.Forms.Layout", "Tansu.Forms.Execution"])]:
+        directory = ROOT / "src" / name
+        files = sorted(path.relative_to(ROOT).as_posix() for path in directory.rglob("*.cs") if "obj" not in path.parts and "bin" not in path.parts)
+        projects.append({"name": name, "namespace": name, "project": f"src/{name}/{name}.csproj",
+                         "targetFramework": "net10.0" if name == "Tansu.Forms.Execution" else "net10.0-windows",
+                         "useWindowsForms": name != "Tansu.Forms.Execution",
+                         "dependencies": dependencies, "sourceFiles": files})
+    source_files = sorted(file for project in projects for file in project["sourceFiles"])
+    registry = {"name": "Tansu.Forms", "targetFramework": "net10.0-windows", "projects": projects, "sourceFiles": source_files, "components": rows}
     (ROOT / "components.json").write_text(json.dumps(registry, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"Mapped all {len(rows)} components: {len(CUSTOM)} composites, {len(NATIVE)} native alternatives; {len(source_files)} source files.")

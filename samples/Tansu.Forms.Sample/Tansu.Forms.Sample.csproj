@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Tansu.Forms.Components/Tansu.Forms.Components.csproj" />
+    <ProjectReference Include="../../src/Tansu.Forms.Layout/Tansu.Forms.Layout.csproj" />
+    <Content Include="../../themes/*.json" Link="themes/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

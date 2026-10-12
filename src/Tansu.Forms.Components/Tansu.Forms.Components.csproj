@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Version>2.0.0</Version>
+    <Description>Code-first Windows Forms inputs, searchable model tables, charts, Gantt schedules and replaceable JSON themes. Uses Tansu.Forms.Layout.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/tansudorobou/MyWinFormsUI</RepositoryUrl>
+    <PackageTags>winforms;ui;components;templates</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Tansu.Forms.Layout/Tansu.Forms.Layout.csproj" />
+    <ProjectReference Include="../Tansu.Forms.Execution/Tansu.Forms.Execution.csproj" />
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="../../themes/*.json" Pack="true" PackagePath="contentFiles/any/any/themes/" PackageCopyToOutput="true" />
+    <None Include="../../docs/*.md" Pack="true" PackagePath="docs/" />
+    <None Include="../../components.json" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>
