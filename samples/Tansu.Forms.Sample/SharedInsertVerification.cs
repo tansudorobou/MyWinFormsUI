@@ -30,6 +30,24 @@ internal static class SharedInsertVerification
         Check(Complete(form.Action.InsertAsync(new Input(), path: "/other")).StatusCode == 404, "Insert adapter checks the path");
         form.Close();
         results.Add("PASS: Shared model IP/choice validation in GUI/action, automatic names and ComboBox, Insert-only delegate adapter and compact registration button");
+
+        int registered = 0;
+        ActionResponse Register(Input input) { registered++; return new(200, input, "任意関数を実行しました。"); }
+        using var registration = PageAction.Create<Input>(Register);
+        using var registeredForm = new ActionForm(registration) { ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Location = new Point(-10000, -10000) };
+        var registeredEditor = new ModelForm<Input>(); var registeredStatus = Elements.Label("");
+        var registeredButton = registeredForm.ExecuteButton(registeredEditor, registration, text: "登録", status: registeredStatus);
+        registeredForm.Controls.Add(Tansu.Forms.Layout.Layout.Stack(registeredEditor, registeredButton, registeredStatus));
+        registeredForm.Show(); Application.DoEvents();
+        var registeredIp = (InputField<object?>)registeredEditor.Fields[nameof(Input.Ip)];
+        registeredIp.Value = "invalid"; Complete(registeredButton.ExecuteAsync());
+        Check(registered == 0 && registeredEditor.HasErrors, "ExecuteButton validates the editor before notifying the subscribed function");
+        registeredIp.Value = "192.168.1.30"; Complete(registeredButton.ExecuteAsync());
+        Check(registered == 1 && registeredStatus.Text == "任意関数を実行しました。" && !registeredEditor.IsDirty
+            && registeredEditor.Enabled && registeredForm.Action.LastResponse?.ReadBody<Input>().Ip == "192.168.1.30",
+            "ExecuteButton executes a subscription without operation names and retains status, input locking and saved state");
+        registeredForm.Close();
+        results.Add("PASS: Compact ExecuteButton runs arbitrary subscribed functions with shared validation and status");
     }
     private static T Complete<T>(Task<T> task)
     {

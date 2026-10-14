@@ -8,7 +8,7 @@ public sealed class ToolRunner
 {
     private readonly IPageAction _action;
     public ToolRunner(IPageAction action) { ArgumentNullException.ThrowIfNull(action); _action = action; }
-    public const string Usage = "SELECT|INSERT|UPDATE|DELETE [/<path>] [--id <id>] [--param name=value] [--body <json|value1 value2 ...|-> | --body-file <file>] [--envelope]";
+    public const string Usage = "<function> [/<path>] [--id <id>] [--param name=value] [--body <json|value1 value2 ...|-> | --body-file <file>] [--envelope]";
 
     /// <summary>Exit codes: 0 success, 1 execution failure, 2 input/validation, 3 missing target, 4 unsupported method, 5 conflict, 130 cancellation.</summary>
     public async Task<int> RunAsync(IReadOnlyList<string> args, TextReader? input = null, TextWriter? output = null,
@@ -26,6 +26,13 @@ public sealed class ToolRunner
             if (args.Count == 1 && args[0] is "--help" or "-h")
             {
                 await output.WriteLineAsync(Usage.AsMemory(), cancellation.Token).ConfigureAwait(false);
+                await output.WriteLineAsync("Functions:".AsMemory(), cancellation.Token).ConfigureAwait(false);
+                foreach (var function in _action is IActionCatalog catalog ? catalog.Functions
+                    : Enum.GetNames<ActionMethod>().Select(name => new ActionFunctionInfo(name, Array.Empty<string>())).ToArray())
+                {
+                    string fields = function.BodyFields.Count > 0 ? $" --body <{string.Join("> <", function.BodyFields)}>" : "";
+                    await output.WriteLineAsync($"  {function.Name}{fields}{(function.Description is null ? "" : $"  {function.Description}")}".AsMemory(), cancellation.Token).ConfigureAwait(false);
+                }
                 return 0;
             }
             var options = Parse(args);
@@ -34,8 +41,10 @@ public sealed class ToolRunner
             {
                 if (source.Count == 1 && source[0] == "-")
                     body = ParseBody(await input.ReadToEndAsync(cancellation.Token).ConfigureAwait(false));
-                else if (source.Count == 1 && (_action is not IPositionalBodyAction || IsJsonBody(source[0])))
+                else if (source.Count == 1 && (_action is not (IPositionalBodyAction or IActionCatalog) || IsJsonBody(source[0])))
                     body = ParseBody(source[0]);
+                else if (_action is IActionCatalog catalog)
+                    body = catalog.ParsePositionalBody(options.Function, source);
                 else if (_action is IPositionalBodyAction positional)
                     body = positional.ParsePositionalBody(source);
                 else throw new ActionInputException("This action supports JSON bodies only.");
@@ -47,7 +56,7 @@ public sealed class ToolRunner
                 { throw new ActionInputException($"Cannot read body file: {failure.Message}"); }
             }
             using var client = new ActionClient(_action);
-            var response = await client.ExecuteAsync(new(options.Method, body, options.Path, options.Parameters), cancellation.Token).ConfigureAwait(false);
+            var response = await client.ExecuteAsync(new(options.Function, body, options.Path, options.Parameters), cancellation.Token).ConfigureAwait(false);
             if (!response.IsSuccess) return await WriteErrorAsync(response, error).ConfigureAwait(false);
             // Serialize before writing, so serialization failure cannot leave a partial JSON document on stdout.
             string result = JsonSerializer.Serialize(options.Envelope ? (object)response : response.Body, ActionJson.Options);
@@ -88,16 +97,15 @@ public sealed class ToolRunner
         return response.StatusCode switch { 400 or 422 => 2, 404 => 3, 405 => 4, 409 => 5, _ => 1 };
     }
 
-    private sealed record Options(ActionMethod Method, string Path, Dictionary<string, string> Parameters, IReadOnlyList<string>? Body, string? BodyFile, bool Envelope);
-    private static Options Parse(IReadOnlyList<string> args)
+    private sealed record Options(string Function, string Path, Dictionary<string, string> Parameters, IReadOnlyList<string>? Body, string? BodyFile, bool Envelope);
+    private Options Parse(IReadOnlyList<string> args)
     {
-        if (args.Count == 0) throw new ActionInputException($"Specify an operation. {Usage}");
-        var method = args[0].ToUpperInvariant() switch
-        {
-            "SELECT" => ActionMethod.Select, "INSERT" => ActionMethod.Insert, "UPDATE" => ActionMethod.Update,
-            "DELETE" => ActionMethod.Delete,
-            _ => throw new ActionInputException($"Unknown operation '{args[0]}'. {Usage}")
-        };
+        if (args.Count == 0) throw new ActionInputException($"Specify a function. {Usage}");
+        string function = args[0];
+        bool known = _action is IActionCatalog catalog
+            ? catalog.Functions.Any(item => string.Equals(item.Name, function, StringComparison.OrdinalIgnoreCase))
+            : Enum.GetNames<ActionMethod>().Any(name => string.Equals(name, function, StringComparison.OrdinalIgnoreCase));
+        if (!known) throw new ActionInputException($"Unknown function '{function}'. Use --help to list available functions. {Usage}");
         string path = "/";
         List<string>? body = null;
         string? bodyFile = null;
@@ -145,8 +153,8 @@ public sealed class ToolRunner
             }
         }
         if (!path.StartsWith('/')) throw new ActionInputException("Path must start with '/'.");
-        if (method == ActionMethod.Select && (body is not null || bodyFile is not null))
+        if (_action is not IActionCatalog && function.Equals("Select", StringComparison.OrdinalIgnoreCase) && (body is not null || bodyFile is not null))
             throw new ActionInputException("SELECT takes parameters, not a body.");
-        return new(method, path, parameters, body, bodyFile, envelope);
+        return new(function, path, parameters, body, bodyFile, envelope);
     }
 }

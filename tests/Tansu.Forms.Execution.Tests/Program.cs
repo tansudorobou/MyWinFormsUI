@@ -104,6 +104,79 @@ try
     Check(result.Code == 0 && echo.Last!.Path == "/records", "Trailing paths after JSON remain supported.");
     results.Add("PASS: Space-separated typed body values, numeric conversion, count/validation rejection, JSON/stdin compatibility and trailing JSON paths.");
 
+    var actions = new PageAction();
+    int saves = 0, pings = 0;
+    ActionResponse Save(Input input) { saves++; return ActionResponse.Ok(input); }
+    ActionResponse Ping() { pings++; return ActionResponse.Ok(new { Alive = true }); }
+    async Task<ActionResponse> Rename(RenameInput input, CancellationToken token)
+    { await Task.Delay(1, token); return ActionResponse.Ok(input); }
+    using var save = actions.Subscribe<Input>(Save, description: "入力を保存");
+    using var ping = actions.Subscribe(Ping);
+    using var rename = actions.Subscribe<RenameInput>(Rename);
+    Check(save.Name == "Save" && ping.Name == "Ping" && rename.Name == "Rename", "Local function names are inferred without SQL verbs or strings.");
+    using var functionClient = new ActionClient(actions);
+    Check(ReferenceEquals((await functionClient.ExecuteAsync(save, dto)).Body, dto)
+        && (await functionClient.ExecuteAsync(ping)).IsSuccess, "GUI/client dispatch uses subscription objects without function names.");
+    Check((await functionClient.ExecuteAsync(save, new Input())).StatusCode == 422 && saves == 1, "Subscribed functions share DTO annotation validation.");
+    result = await Run(actions, ["sAvE", "--body", "東京 本社", "7"]);
+    Check(result.Code == 0 && result.Error == "" && JsonDocument.Parse(result.Output).RootElement.GetProperty("name").GetString() == "東京 本社" && saves == 2, "CLI dispatches arbitrary inferred function names case-insensitively.");
+    result = await Run(actions, ["Rename", "--body", "新しい名前"]);
+    Check(result.Code == 0 && JsonDocument.Parse(result.Output).RootElement.GetProperty("title").GetString() == "新しい名前", "Each async function uses its own positional DTO shape.");
+    result = await Run(actions, ["Save", "--body", "-"], "{\"name\":\"stdin\",\"quantity\":4}");
+    Check(result.Code == 0 && result.Output.Contains("stdin"), "Subscribed functions accept piped JSON.");
+    result = await Run(actions, ["--help"]);
+    Check(result.Code == 0 && result.Error == "" && result.Output.Contains("Save --body <name> <quantity>")
+        && result.Output.Contains("Rename --body <title>") && result.Output.Contains("入力を保存")
+        && result.Output.Contains("Ping") && !result.Output.Contains("INSERT") && pings == 1, "Help lists only subscriptions with field order and description and invokes nothing.");
+    result = await Run(actions, ["DELETE"]);
+    Check(result.Code == 2 && result.Output == "" && result.Error.Contains("--help"), "Unregistered SQL verbs cannot trigger arbitrary functions.");
+    result = await Run(actions, ["Ping", "--body", "{}"]);
+    Check(result.Code == 2 && pings == 1, "No-input functions reject accidental bodies before execution.");
+    try { actions.Subscribe<Input>(Save, name: "save"); throw new Exception("Duplicate subscription was accepted."); }
+    catch (ArgumentException) { }
+    ping.Dispose();
+    result = await Run(actions, ["-h"]);
+    Check(!result.Output.Contains("Ping"), "Unsubscribing updates help immediately.");
+    using var replacement = actions.Subscribe(Ping);
+    ping.Dispose();
+    Check((await functionClient.ExecuteAsync(ping)).StatusCode == 405
+        && (await functionClient.ExecuteAsync(replacement)).IsSuccess, "Stale subscription handles cannot invoke or remove a replacement.");
+    using var otherClient = new ActionClient(new PageAction());
+    Check((await otherClient.ExecuteAsync(save, dto)).StatusCode == 405, "Subscriptions cannot be executed against another registry.");
+    using var customSelect = actions.Subscribe<Input>(Save, name: "Select");
+    result = await Run(actions, ["Select", "--body", "custom", "5"]);
+    Check(result.Code == 0, "Registered names do not inherit SQL verb body restrictions.");
+    using var wait = actions.Subscribe(async (CancellationToken token) =>
+    { await Task.Delay(Timeout.Infinite, token); return ActionResponse.Ok(); }, name: "Wait");
+    using var functionCancellation = new CancellationTokenSource();
+    var functionPending = functionClient.ExecuteAsync(wait, functionCancellation.Token);
+    Check(functionClient.PendingRequest?.Function == "Wait", "Pending function is observable.");
+    functionCancellation.Cancel();
+    try { await functionPending; throw new Exception("Subscribed cancellation was ignored."); } catch (OperationCanceledException) { }
+    Check(functionClient.IsCanceled && !functionClient.IsRunning, "Subscribed async functions retain cancellation and state tracking.");
+    results.Add("PASS: Arbitrary subscriptions, name-free GUI execution, inferred CLI names/help, per-function bodies, validation, unsubscription, duplicates and cancellation.");
+
+    using var factorySave = PageAction.Create<Input>(Save, description: "保存する関数");
+    using var independentSave = PageAction.Create<Input>(Save);
+    using var factoryClient = new ActionClient(factorySave);
+    Check(ReferenceEquals((await factoryClient.ExecuteAsync(factorySave, dto)).Body, dto), "Factory results are directly usable as both page actions and typed execution handles.");
+    result = await Run(factorySave, ["Save", "--body", "factory", "6"]);
+    Check(result.Code == 0 && result.Output.Contains("factory"), "Factory results directly support CLI positional execution.");
+    result = await Run(factorySave, ["--help"]);
+    Check(result.Output.Contains("Save --body <name> <quantity>") && result.Output.Contains("保存する関数")
+        && !result.Output.Contains("Ping"), "Factory help advertises its own inferred function and metadata.");
+    factorySave.Dispose();
+    Check((await factoryClient.ExecuteAsync(factorySave, dto)).StatusCode == 405, "Disposing a factory registration prevents further execution.");
+    result = await Run(independentSave, ["Save", "--body", "independent", "8"]);
+    Check(result.Code == 0, "Factories isolate registrations even when function names match.");
+    using var factoryPing = PageAction.Create(Ping);
+    result = await Run(factoryPing, ["Ping"]);
+    Check(result.Code == 0, "No-input factory functions are directly callable from the CLI.");
+    using var factoryAsync = PageAction.Create<RenameInput>(Rename);
+    result = await Run(factoryAsync, ["Rename", "--body", "async"]);
+    Check(result.Code == 0 && result.Output.Contains("async"), "Async factories retain typed body binding and function names.");
+    results.Add("PASS: Static factories combine creation/subscription, execute directly from client/CLI, retain help and disposal, and isolate matching function names.");
+
     using var started = new CancellationTokenSource();
     var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
     using var pendingClient = new ActionClient(new DelegateAction(async (_, token) =>
@@ -144,6 +217,10 @@ sealed class Input
 {
     [Required] public string Name { get; set; } = "";
     [Range(0, 100)] public int Quantity { get; set; }
+}
+sealed class RenameInput
+{
+    [Required] public string Title { get; set; } = "";
 }
 sealed class EchoAction : IPageAction
 {

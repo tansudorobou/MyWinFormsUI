@@ -11,6 +11,9 @@ public interface IPositionalBodyAction
 
 internal static class PositionalBody
 {
+    internal static IReadOnlyList<string> Names<T>() where T : class => ActionJson.Options.GetTypeInfo(typeof(T)).Properties
+        .Where(property => property.Get is not null && property.Set is not null).OrderBy(property => property.Order)
+        .Select(property => property.Name).ToArray();
     internal static JsonElement Parse<T>(IReadOnlyList<string> values) where T : class
     {
         var properties = ActionJson.Options.GetTypeInfo(typeof(T)).Properties

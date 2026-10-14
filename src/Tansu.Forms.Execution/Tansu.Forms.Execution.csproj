@@ -3,7 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <UseWindowsForms>false</UseWindowsForms>
     <Version>2.0.0</Version>
-    <Description>UI-independent page actions with SELECT/INSERT/UPDATE/DELETE operations, search parameters and JSON command-line input/output.</Description>
+    <Description>UI-independent subscribed functions with shared input validation, discoverable CLI help and JSON command-line input/output.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/tansudorobou/MyWinFormsUI</RepositoryUrl>
     <PackageTags>cli;execution;tansu</PackageTags>

@@ -1,6 +1,6 @@
 namespace Tansu.Forms.Execution;
 
-/// <summary>Convenient verbs for a single page action. No UI context is captured; StateChanged can run on a worker thread.</summary>
+/// <summary>Executes subscribed functions or requests. StateChanged can run on a worker thread.</summary>
 public sealed class ActionClient : IDisposable
 {
     private readonly IPageAction _action;
@@ -18,6 +18,17 @@ public sealed class ActionClient : IDisposable
     public Exception? LastError { get { lock (_gate) return _error; } }
     public bool IsCanceled { get { lock (_gate) return _canceled; } }
     public event EventHandler? StateChanged;
+
+    public Task<ActionResponse> ExecuteAsync<T>(ActionSubscription<T> function, T body, CancellationToken cancellationToken = default) where T : class
+    {
+        ArgumentNullException.ThrowIfNull(function);
+        return ExecuteAsync(new ActionRequest(function.Name, body) { Subscription = function }, cancellationToken);
+    }
+    public Task<ActionResponse> ExecuteAsync<TFunction>(TFunction function, CancellationToken cancellationToken = default) where TFunction : ActionSubscription
+    {
+        ArgumentNullException.ThrowIfNull(function);
+        return ExecuteAsync(new ActionRequest(function.Name) { Subscription = function }, cancellationToken);
+    }
 
     public Task<ActionResponse> SelectAsync(IReadOnlyDictionary<string, string>? parameters = null, string path = "/",
         CancellationToken cancellationToken = default)

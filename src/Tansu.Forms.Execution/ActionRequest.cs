@@ -7,7 +7,7 @@ namespace Tansu.Forms.Execution;
 
 public enum ActionMethod { Select, Insert, Update, Delete }
 
-/// <summary>One page's UI-independent entry point. Implement Method/Path dispatch inside this method.</summary>
+/// <summary>One page's UI-independent entry point. PageAction provides subscription-based dispatch.</summary>
 public interface IPageAction
 {
     Task<ActionResponse> ExecuteAsync(ActionRequest request, CancellationToken cancellationToken);
@@ -18,17 +18,24 @@ public sealed class ActionRequest
 {
     public ActionRequest(ActionMethod method, object? body = null, string path = "/",
         IReadOnlyDictionary<string, string>? parameters = null)
+        : this(Enum.IsDefined(method) ? method.ToString() : throw new ArgumentOutOfRangeException(nameof(method)), body, path, parameters) { }
+
+    public ActionRequest(string function, object? body = null, string path = "/",
+        IReadOnlyDictionary<string, string>? parameters = null)
     {
-        if (!Enum.IsDefined(method)) throw new ArgumentOutOfRangeException(nameof(method));
+        ArgumentException.ThrowIfNullOrWhiteSpace(function);
         if (string.IsNullOrWhiteSpace(path) || !path.StartsWith('/'))
             throw new ArgumentException("Path must start with '/'.", nameof(path));
-        Method = method; Body = body; Path = path;
+        Function = function; Body = body; Path = path;
         Parameters = new ReadOnlyDictionary<string, string>(parameters is null
             ? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             : new Dictionary<string, string>(parameters, StringComparer.OrdinalIgnoreCase));
     }
 
-    public ActionMethod Method { get; }
+    public string Function { get; }
+    /// <summary>Compatibility view for the original SQL operation API; custom functions return null.</summary>
+    public ActionMethod? Method => Enum.TryParse<ActionMethod>(Function, true, out var method) && Enum.IsDefined(method) ? method : null;
+    internal ActionSubscription? Subscription { get; init; }
     public string Path { get; }
     /// <summary>Search conditions or target identifiers. The handler defines and validates their meaning.</summary>
     public IReadOnlyDictionary<string, string> Parameters { get; }

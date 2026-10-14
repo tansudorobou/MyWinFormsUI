@@ -12,17 +12,18 @@ using Tansu.Forms.Execution;
 using Tansu.Forms.Layout;
 using UiLayout = Tansu.Forms.Layout.Layout;
 
-return await ActionApp.RunAsync(args, PageAction.Insert<SiteRegistrationInput>(Insert), form =>
+using var register = PageAction.Create<SiteRegistrationInput>(Register);
+return await ActionApp.RunAsync(args, register, form =>
 {
     form.Text = "設備のIPアドレス・拠点登録";
     var editor = new ModelForm<SiteRegistrationInput>(new() { IpAddress = "192.168.1.10", SiteKey = "tokyo" });
     var status = Elements.Label("IPアドレスと拠点を選択して登録してください。");
-    var buttons = UiLayout.Row(form.InsertButton(editor, status: status));
+    var buttons = UiLayout.Row(form.ExecuteButton(editor, register, text: "登録", status: status));
     buttons.FlowDirection = FlowDirection.RightToLeft;
     UiLayout.Root(form, RootSize.Small, editor, buttons, status);
 });
 
-static ActionResponse Insert(SiteRegistrationInput input)
+static ActionResponse Register(SiteRegistrationInput input)
 {
     // 実際のDB・ファイルへの登録処理をここに追加してください。
     return new(201, input, $"登録しました。（{SiteOptions.Values[input.SiteKey]} / {input.IpAddress}）");

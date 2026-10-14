@@ -10,7 +10,7 @@ Windows Formsの標準コントロールを、コードだけで組み合わせ�
 | --- | --- |
 | `src/Tansu.Forms.Layout` | 自動配置、ルートサイズ・最小サイズ、STA設定を任せるFormsApp起動API |
 | `src/Tansu.Forms.Components` | 入力部品、データグリッド、検索、ガント、テーマ |
-| `src/Tansu.Forms.Execution` | WinForms非依存の共通Action、SQL由来の操作名を持つRequest/Response、JSON CLI入出力（net10.0） |
+| `src/Tansu.Forms.Execution` | WinForms非依存の関数登録・実行、Request/Response、関数一覧付きJSON CLI入出力（net10.0） |
 | `samples/Tansu.Forms.Sample` | 製造実績の登録・検索・ソートと自動配置を試せるアプリ |
 | `tests/Tansu.Forms.UiTests` | FlaUI/UI Automationによる別プロセスからの入力・ボタン操作の検証 |
 | `tests/Tansu.Forms.Execution.Tests` | GUIなしで実行するAction・CLI入出力の検証 |
@@ -102,6 +102,37 @@ dotnet run --file samples/Tansu.Forms.SingleFile/Program.cs
 
 ## 1ファイルでGUIとCLIから同じActionを実行する
 
+`PageAction.Create<T>(関数)` の1行で任意の関数を登録し、GUIとCLIから共用できます。
+SQL操作名の指定、Actionクラス、`switch` による振り分け、関数名の文字列の重複記述は不要です。
+
+```csharp
+using var save = PageAction.Create<MyInput>(Save);
+return await ActionApp.RunAsync(args, save, form =>
+{
+    var editor = new ModelForm<MyInput>();
+    var status = Elements.Label("");
+    Layout.Root(form, RootSize.Small, editor,
+        form.ExecuteButton(editor, save, text: "保存", status: status), status);
+});
+
+static ActionResponse Save(MyInput input) => new(200, input, "保存しました。");
+```
+
+`Create<T>` は入力モデルを受け取る同期関数・非同期関数を登録し、入力なしなら `PageAction.Create(Ping)` のように書けます。
+返り値をそのまま `ActionApp` / `ActionClient` / `ToolRunner` とGUIのボタンに渡せるため、レジストリーの生成と関数登録を分けて書く必要はありません。
+ファクトリーは呼び出すたびに独立した登録を作成します。
+非同期は `Task<ActionResponse> SaveAsync(MyInput input, CancellationToken token)` と、トークンなしの形に対応します。
+GUIでは `form.Action.ExecuteAsync(save, input)` または `form.ExecuteButton(editor, save)` に登録オブジェクトを渡します。
+CLIでは `Save --body ...` のように関数名を指定します。通常のメソッドもトップレベルのローカル関数も名前を自動取得します。
+ラムダを登録するときやCLIの名前を変えるときは `name: "Save"`、ヘルプの説明には `description: "入力を保存"` を指定できます。
+複数の関数は `var actions = PageAction.Create();` にそれぞれ `actions.Subscribe<T>(関数)` で追加し、`actions` を起動APIに渡します。
+`--help` / `-h` は現在登録されている関数名・入力項目の順序・説明を表示します。ヘルプ表示では関数やGUIを実行しません。
+
+登録・解除を行うオブザーバー形式のAPIです。返された登録オブジェクトの `Dispose()` で解除します。
+GUI/CLIの終了まで登録を保持してください。実行済みの処理は登録解除で取り消されず、取消には `ActionClient.Cancel()` を使用します。
+1つの関数名につき1つの処理を登録でき、同名の重複登録（大文字・小文字違いを含む）はエラーになります。
+実行は関数名で振り分けます。`Path` / `Parameters` の解釈が必要な独自処理は `IPageAction` で実装できます。
+
 [SiteRegistration.cs](samples/Tansu.Forms.SingleFile/SiteRegistration.cs)は、IPアドレスと拠点を入力して登録する別のサンプルです。
 `Program.cs`からは独立して実行します。
 
@@ -110,28 +141,35 @@ dotnet run --file samples/Tansu.Forms.SingleFile/SiteRegistration.cs
 ```
 
 IPv4の必須入力と、初期設定済みComboBoxによる東京・大阪・名古屋の拠点選択があります。
-46行のサンプルでは `PageAction.Insert<SiteRegistrationInput>(Insert)` と `form.InsertButton(editor, status: status)` を使用します。
+サンプルでは `PageAction.Create<SiteRegistrationInput>(Register)` と `form.ExecuteButton(editor, register, text: "登録", status: status)` を使用します。
 Actionクラス・振り分け処理・DTOの手動作成・項目名の手動設定・GUIとActionの重複検証は不要です。
 `ModelForm<T>` が `[DisplayName]` からラベルと項目名を設定し、`[Choices]` の辞書からComboBoxを生成します。
 `[Required]` / `[IpAddress(IpAddressKind.IPv4)]` / `[Choices]` はDataAnnotationsとしてフォームとActionで共用します。
-`InsertButton` は入力検証、実行中の入力ロック、エラー表示、成功メッセージ、変更の保存済み扱いをまとめます。
-Actionの `ReadBody<T>` も同じ属性で検証するので、GUIを通らない不正入力もInsert関数へ渡りません。
+`ExecuteButton` は入力検証、実行中の入力ロック、エラー表示、成功メッセージ、変更の保存済み扱いをまとめます。
+Actionの `ReadBody<T>` も同じ属性で検証するので、GUIを通らない不正入力も登録関数へ渡りません。
 成功すると画面に「登録しました。」と選択した拠点・IPを表示します。
-このサンプルのInsertは結果を返すだけのひな形で、保存は行いません。実際のDB・ファイル登録はInsert関数に追加してください。
-非同期処理は `PageAction.Insert<T>((input, token) => InsertAsync(input, token))` の形でも指定できます。
+このサンプルのRegisterは結果を返すだけのひな形で、保存は行いません。実際のDB・ファイル登録はRegister関数に追加してください。
+非同期処理は `PageAction.Create<T>(RegisterAsync)` の形でも指定できます。
 共有検証とボタンの動作確認はサンプルプロジェクトの `--verify` に含めています。
 
 CLIではスペース区切りでモデルの各項目を渡せます。
 
 ```powershell
-dotnet run --file .\samples\Tansu.Forms.SingleFile\SiteRegistration.cs -- Insert --body 192.168.0.1 tokyo --envelope
+dotnet run --file .\samples\Tansu.Forms.SingleFile\SiteRegistration.cs -- Register --body 192.168.0.1 tokyo --envelope
+dotnet run --file .\samples\Tansu.Forms.SingleFile\SiteRegistration.cs -- --help
 ```
 
 このモデルでは `IpAddress` → `SiteKey` の順です。項目数が合わない場合は、必要な項目数と順序を表示して終了します。
-`PageAction.Insert<T>` がモデルの書き込み可能なJSONプロパティ順で変換し、JSONの場合と同じDataAnnotations検証を実行します。
+`Subscribe<T>` がモデルの書き込み可能なJSONプロパティ順で変換し、JSONの場合と同じDataAnnotations検証を実行します。
 文字列内のスペースは `"東京 本社"` のように引用符で囲んで1つの引数にしてください。
 数値等はカルチャーに依存しない形式で変換します。順序を明示する場合はモデルに `JsonPropertyOrder` 属性を使用できます。
-既存のJSON・`--body -`・`--body-file` も使用できます。通常の `IPageAction` は従来どおりJSONのみを扱い、独自の位置指定入力は `IPositionalBodyAction` の実装で追加できます。
+既存のJSON・`--body -`・`--body-file` も使用できます。各関数に異なる入力モデルを登録できます。
+通常の `IPageAction` は従来どおりJSONのみを扱い、独自の位置指定入力は `IPositionalBodyAction`、関数一覧と関数別の位置指定入力は `IActionCatalog` の実装で追加できます。
+
+### 既存のSQL操作名API
+
+`PageAction.Insert<T>` / `InsertButton` / `SelectAsync` などの既存APIも引き続き使用できます。
+独自関数では `ActionRequest.Function` が関数名を保持し、互換用の `Method` はSQL操作名の場合だけ値を持つ nullable enum です。
 
 [ActionTool.cs](samples/Tansu.Forms.SingleFile/ActionTool.cs)は、引数なしでGUI、SELECTなどの引数付きでCLIとして動くサンプルです。
 CLIではGUIのコールバックを実行せず、コントロールも作成しません。利用者のコードは1つの`.cs`ファイルにまとめられます。
@@ -829,7 +867,7 @@ dotnet run --file samples/Tansu.Forms.SingleFile/ActionTool.cs -- --verify
 ./scripts/Verify-Execution.ps1
 ```
 
-操作/Path/Parameters、型付きBody、入力検証、標準入力・ファイル入力、JSONの連結、標準エラー・終了コード、同時実行防止・取消を確認します。
+任意関数の登録・解除、関数一覧付きヘルプ、関数別の入力モデル、操作/Path/Parameters、型付きBody、入力検証、標準入力・ファイル入力、JSONの連結、標準エラー・終了コード、同時実行防止・取消を確認します。
 結果は`artifacts/execution-verification/results.txt`に保存します。
 `Verify-Execution.ps1`は一時保存先で実際の単一ファイルアプリと発行したexeを動かし、PowerShellでのパイプ、別プロセス間の保存・取得、エラー・終了コードを検証します。
 結果は`artifacts/cli-verification/results.txt`に保存します。
